@@ -1,0 +1,29 @@
+apiVersion: v1
+entries:
+  openvpn-duo:
+  - apiVersion: v1
+    appVersion: 1.0.0
+    created: "2022-05-09T10:06:54.100890132Z"
+    description: A Helm chart to install an openvpn server with duo plugin inside
+      a kubernetes cluster. Based on deprecated stable repo https://github.com/helm/charts/tree/master/stable/openvpn.
+    digest: 99eab67497c5ea5c9bb8f1e15fd34ac8ca4ecde532dd8a92802a59a263b2a8fd
+    home: https://openvpn.net/index.php/open-source.html
+    icon: https://forums.openvpn.net/styles/openvpn/theme/images/ovpnlogo.png
+    keywords:
+    - openvpn
+    - vpn
+    - duo
+    - tunnel
+    - network
+    - service
+    - connectivity
+    - encryption
+    name: openvpn-duo
+    sources:
+    - https://github.com/jfelten/openvpn-docker
+    - https://github.com/kubernetes/charts/tree/master/stable/openvpn
+    - https://github.com/jfelten/helm-charts
+    urls:
+    - https://github.com/Airnauts/helm-charts/releases/download/openvpn-duo-1.0.0/openvpn-duo-1.0.0.tgz
+    version: 1.0.0
+generated: "2022-05-09T10:06:54.101079033Z"
