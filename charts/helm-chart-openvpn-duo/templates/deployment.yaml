@@ -28,6 +28,17 @@ spec:
 {{ toYaml .Values.podAnnotations | indent 8 }}
         {{- end }}
     spec:
+      {{- if .Values.nodeAffinity }}
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: group
+                operator: In
+                values:
+                - {{ .Values.nodeAffinity }}
+      {{- end }}
 {{- if .Values.ipForwardInitContainer }}
       initContainers:
         - args:
