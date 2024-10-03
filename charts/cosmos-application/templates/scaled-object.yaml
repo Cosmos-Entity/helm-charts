@@ -1,0 +1,38 @@
+{{- if eq .Values.application.autoscaler.enabled true -}}
+apiVersion: keda.sh/v1alpha1
+kind: ScaledObject
+metadata:
+  name: {{ required "application.serviceId is required" .Values.application.serviceId | quote }}
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: {{ required "application.serviceId is required" .Values.application.serviceId | quote }}
+    envSourceContainerName: {{ required "application.containerName or application.serviceId is required" (coalesce .Values.application.containerName .Values.application.serviceId) | quote }}
+  pollingInterval: {{ .Values.application.autoscaler.pollingIntervalSeconds | default 30 }}
+  cooldownPeriod: {{ .Values.application.autoscaler.cooldownPeriodSeconds | default 300 }}
+  minReplicaCount: {{ .Values.application.autoscaler.minReplicaCount | default 0 }}
+  maxReplicaCount: {{ .Values.application.autoscaler.maxReplicaCount | default 100 }}
+  fallback:
+    failureThreshold: {{ .Values.application.autoscaler.fallbackFailureThreshold | default 3 }}
+    replicas: {{ .Values.application.autoscaler.fallbackReplicas | default 1 }}
+  advanced:
+    restoreToOriginalReplicaCount: {{ .Values.application.autoscaler.restoreToOriginalReplicaCount | default false }}
+    horizontalPodAutoscalerConfig:
+      behavior:
+        scaleDown:
+          stabilizationWindowSeconds: {{ .Values.application.autoscaler.horizontalPodAutoscalerStabilizationWindowSeconds | default 300 }}
+          policies:
+          - type: Percent
+            value: {{ .Values.application.autoscaler.horizontalScaleDownPercent | default 100 }}
+            periodSeconds: {{ .Values.application.autoscaler.horizontalScaleDownPeriodSeconds | default 15 }}
+  triggers:
+    {{- if eq .Values.application.autoscaler.cpuThresholdTriggerEnabled true }}
+    - type: cpu
+      metadata:
+        type: Utilization
+        value: {{ .Values.application.autoscaler.cpuThresholdPercent | default 90 | quote }}
+    {{- range $trigger := .Values.application.autoscaler.additionalTriggers }}
+        - {{ $trigger }}{{- end }}
+    {{- end -}}
+{{- end }}

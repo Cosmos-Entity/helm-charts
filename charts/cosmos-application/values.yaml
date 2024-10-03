@@ -1,0 +1,127 @@
+# yaml-language-server: $schema=values.yaml
+replicaCount: 1
+
+image:
+  repository: "806463762376.dkr.ecr.us-east-1.amazonaws.com/cosmos-service-id"
+  tag: "latest"
+  pullPolicy: IfNotPresent
+
+service:
+  type: ClusterIP
+  port: 80
+
+serviceAccount:
+  create: true
+  automount: true
+  annotations: {}
+  name: ""
+
+podAnnotations: {}
+podLabels: {}
+
+podSecurityContext: {}
+
+securityContext: {}
+
+ingress:
+  enabled: false
+  className: ""
+  annotations: {}
+  hosts:
+    - host: chart-example.local
+      paths:
+        - path: /
+          pathType: ImplementationSpecific
+  tls: []
+
+resources: {}
+
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 100
+  targetCPUUtilizationPercentage: 80
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
+
+cosmos:
+  language: dotnet
+  deployment: cosmos
+
+env: dev
+fullname: "test"
+
+application:
+  language: dotnet
+  deployment: cosmos
+  serviceId: cosmos-analytics-iec
+  serviceType: integration-event-consumer
+  containerName: null
+
+  podDisruptionBudgetMinAvailable: 1
+
+  serviceProtocol: http
+  requiredNodeClass: cpu
+  preferredNodeClass: null
+  port: 8080
+  portName: http-ingress
+  exposedPort: null
+  args: ["integration-event-consumer"]
+
+  replicas: 1
+
+  autoscaler:
+    enabled: true
+    minReplicaCount: 1
+    maxReplicaCount: 2
+    pollingIntervalSeconds: 30
+    cooldownPeriodSeconds: 300
+    fallbackFailureThreshold: 3
+    fallbackReplicas: 1
+    restoreToOriginalReplicaCount: false
+    horizontalPodAutoscalerStabilizationWindowSeconds: 300
+    horizontalScaleDownPercent: 100
+    horizontalScaleDownPeriodSeconds: 15
+    cpuThresholdTriggerEnabled: true
+    cpuThresholdPercent: 90
+    additionalTriggers: []
+
+  resources:
+    limits:
+      memory: 256Mi
+      ephemeral-storage: 256Mi
+    requests:
+      cpu: 10m
+      memory: 128Mi
+      ephemeral-storage: 256Mi
+
+  ssmParameterMounts:
+    - name: cosmos-graphql-shared-secret
+      key: appsettings
+      path: appsettings.Shared.json
+      mountPath: /app/appsettings.Shared.json
+
+livenessProbe:
+  enabled: true
+  initialDelaySeconds: 15
+  periodSeconds: 20
+  timeoutSeconds: 10
+  terminationGracePeriodSeconds: 120
+  grpcConnectTimeoutSeconds: 5
+  grpcRpcTimeoutSeconds: 30
+
+readinessProbe:
+  enabled: true
+  initialDelaySeconds: 10
+  periodSeconds: 10
+  timeoutSeconds: 10
+  grpcConnectTimeoutSeconds: 5
+  grpcRpcTimeoutSeconds: 30
+
+additionalVolumes: []
+
+additionalVolumeMounts: []

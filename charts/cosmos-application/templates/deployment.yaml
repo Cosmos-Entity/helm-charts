@@ -1,0 +1,128 @@
+{{- define "dotnetEnvironment" -}}
+{{ if (eq .Values.env "dev") }}Development{{ else if (eq .Values.env "staging") }}Staging{{ else if (eq .Values.env "prod") }}Production{{ else }}Unknown{{ end -}}
+{{- end -}}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "cosmos-application.fullname" . }}
+  labels:
+    {{- include "cosmos-application.labels" . | nindent 4 }}
+    app: {{ .Values.application.serviceId | quote }}
+    tags.datadoghq.com/service: {{ .Values.application.serviceId | quote }}
+    tags.datadoghq.com/env: {{ .Values.env | quote }}
+  annotations:
+    fluxcd.io/automated: "false"
+    fluxcd.io/ignore: "true"
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ .Values.application.serviceId | quote }}
+  template:
+    metadata:
+      labels:
+        {{- include "cosmos-application.selectorLabels" . | nindent 8 }}
+        {{- if (.Values.application.workloadLabel | default false) }}
+        workload: {{ .Values.application.workloadLabel | quote }}
+        {{- end }}
+        {{- if .Values.application.deployment }}
+        deployment: {{ .Values.application.deployment | quote }}
+        {{- end }}
+        app: {{ (coalesce .Values.application.appLabelOverride .Values.application.serviceId) | quote }}
+        service: "http"
+        tags.datadoghq.com/service: {{ .Values.application.serviceId | quote }}
+        tags.datadoghq.com/env: {{ .Values.env | quote }}
+      {{- if (and (not (eq .Values.application.safeToEvict false)) (or .Values.application.safeToEvict false)) }}
+      annotations:
+        {{- if (and (not (eq .Values.application.safeToEvict false)) (or .Values.application.safeToEvict false)) }}
+        cluster-autoscaler.kubernetes.io/safe-to-evict: "true"
+        {{- end }}
+      {{- end }}
+    spec:
+      {{- include "deployment.spec.template.spec.node-affinity" . | nindent 6 }}
+      {{- if eq (.Values.application.skipInitContainers | default false) false }}
+      {{- include "deployment.spec.template.spec.init-containers" . | nindent 6 }}
+      {{- end }}
+
+      #
+      # containers
+      #
+      containers:
+      - name: {{ .Chart.Name }}
+        image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+        imagePullPolicy: {{ .Values.image.pullPolicy }}
+        {{- if .Values.application.args }}
+        args:
+        {{- range .Values.application.args }}
+        - {{ . | quote }}
+        {{- end }}
+        {{- end }}
+
+        #
+        # env
+        #
+        env:
+        {{- include "deployment.spec.template.spec.containers.env.default" . | nindent 8 }}
+        {{- include "deployment.spec.template.spec.containers.env.app" . | nindent 8 }}
+        {{- include "deployment.spec.template.spec.containers.env.dotnet" . | nindent 8 }}
+
+        #
+        # service port
+        #
+        ports:
+        {{- include "deployment.spec.template.spec.containers.ports.service" . | nindent 8 }}
+
+        #
+        # probes
+        #
+        {{- include "deployment.spec.template.spec.containers.readiness-probe.dotnet-grpc" . | nindent 8 }}
+        {{- include "deployment.spec.template.spec.containers.readiness-probe.dotnet-http" . | nindent 8 }}
+        {{- include "deployment.spec.template.spec.containers.liveness-probe.dotnet-grpc" . | nindent 8 }}
+        {{- include "deployment.spec.template.spec.containers.liveness-probe.dotnet-http" . | nindent 8 }}
+        
+        #
+        # volume mounts
+        #
+        volumeMounts:
+        {{- include "deployment.spec.template.spec.containers.volume-mounts.empty-dir" . | nindent 8 }}
+        {{- include "deployment.spec.template.spec.containers.volume-mounts.downward-api" . | nindent 8 }}
+        {{- include "deployment.spec.template.spec.containers.volume-mounts.dotnet-appsettings" . | nindent 8 }}
+        {{- include "deployment.spec.template.spec.containers.volume-mounts.ssm-parameters" . | nindent 8 }}
+        {{- include "deployment.spec.template.spec.containers.volume-mounts.dotenv-secrets" . | nindent 8 }}
+        {{- include "deployment.spec.template.spec.containers.volume-mounts.shm" . | nindent 8 -}}
+        {{ range .Values.additionalVolumeMounts }}
+        - name: {{ .name }}
+          mountPath: {{ .mountPath }}
+          {{- if .subPath }}
+          subPath: {{ .subPath }}
+          {{- end }}
+        {{- end }}
+
+        #
+        # resources
+        #
+        resources:
+          {{- toYaml .Values.application.resources | nindent 10 }}
+
+
+      {{- if .Values.application.suppressServiceAccountName }}
+      #
+      # service account
+      #
+      serviceAccountName: {{ coalesce .Values.application.serviceAccountName | quote }}
+      {{- end }}
+
+      #
+      # volumes
+      #
+      volumes:
+      {{- include "deployment.spec.template.spec.volumes.downward-api" . | nindent 6 }}
+      {{- include "deployment.spec.template.spec.volumes.empty-dir" . | nindent 6 }}
+      {{- include "deployment.spec.template.spec.volumes.dotnet-secrets" . | nindent 6 }}
+      {{- include "deployment.spec.template.spec.volumes.ssm-parameters" . | nindent 6 }}
+      {{- include "deployment.spec.template.spec.volumes.dotenv-secrets" . | nindent 6 }}
+      {{- include "deployment.spec.template.spec.volumes.shm" . | nindent 6 }}
+      {{ range .Values.additionalVolumes }}
+      - name: {{ .name }}
+        {{ toYaml . | nindent 6 }}
+      {{ end }}
