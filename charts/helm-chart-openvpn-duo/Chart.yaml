@@ -5,16 +5,16 @@ version: 1.0.2
 appVersion: 1.0.2
 icon: https://forums.openvpn.net/styles/openvpn/theme/images/ovpnlogo.png
 keywords:
-- openvpn
-- vpn
-- duo
-- tunnel
-- network
-- service
-- connectivity
-- encryption
+  - openvpn
+  - vpn
+  - duo
+  - tunnel
+  - network
+  - service
+  - connectivity
+  - encryption
 home: https://openvpn.net/index.php/open-source.html
 sources:
-- https://github.com/jfelten/openvpn-docker
-- https://github.com/kubernetes/charts/tree/master/stable/openvpn
-- https://github.com/jfelten/helm-charts
+  - https://github.com/jfelten/openvpn-docker
+  - https://github.com/kubernetes/charts/tree/master/stable/openvpn
+  - https://github.com/jfelten/helm-charts

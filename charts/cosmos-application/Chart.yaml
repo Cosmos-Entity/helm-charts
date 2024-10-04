@@ -1,0 +1,14 @@
+---
+# yaml-language-server: $schema=https://json.schemastore.org/chart.json
+apiVersion: v2
+description: A helm chart to deploy Cosmos in-house applications
+name: cosmos-application
+type: application
+version: "0.1.0"
+appVersion: "0.1.0"
+icon: "https://www.cosmos.so/safari-pinned-tab.svg"
+keywords:
+  - "cosmos"
+home: "https://www.cosmos.so"
+sources:
+  - "https://github.com/Cosmos-Entity/helm-charts"
